@@ -3,7 +3,7 @@ import random
 from scoring import PokerScore, valid_card_scoring
 
 score = PokerScore()
-
+hands_played = 5
 # Used to check for straights and straight flush
 ORDER = ['A','K','Q','J','10','9','8','7','6','5','4','3','2']
 
@@ -99,13 +99,14 @@ def check_hand_rank(hand_state):
         return f"This is a high card, {score.high_card()}"
 
 # Keeps going until the deck is 0, then the game ends for now. Will add a set number of hand plays for the player to reach a certain score threshold instead
-while len(actual_deck) != 0:
+while hands_played > 0:
     user_input = input("Enter 5 cards from hand: ")
-    play = user_input.split()
+    play = user_input.upper().split()
     valid_hand = all(card in hand_state for card in play)
     if valid_hand:
         drawn = [actual_deck.pop(random.randrange(len(actual_deck))) for _ in range(5)]
         hand_state.extend(drawn)
+        hands_played -= 1
         for card in play:
             hand_state.remove(card)
     else:
@@ -117,6 +118,7 @@ while len(actual_deck) != 0:
     print(f"Your hand: {sorted(hand_state)}")
     print(check_hand_rank(play))
     print(f"Total score: {score.value}")
+    print(f"Hands remaining: {hands_played}")
 
 # To be added later: instead of return statements on the hand name,
 # functions will be imported for actual scoring. Then a round system, then something
