@@ -1,7 +1,8 @@
 class RoundManager:
-    def __init__(self, actual_deck, discard_pile, score, hands_per_round=5, start_threshold=100, threshold_step=250):
+    def __init__(self, actual_deck, hand_state, discard_pile, score, hands_per_round=5, start_threshold=100, threshold_step=200):
         self.actual_deck = actual_deck
         self.discard_pile = discard_pile
+        self.hand_state = hand_state
         self.score = score
 
         self.hands_per_round = hands_per_round
@@ -25,5 +26,8 @@ class RoundManager:
         # Reset score
         self.score.value = 0
 
+        # Print status at start of new round
         print(f"--- Round {self.round_num} ---")
+        print(f"Remaining cards: {sorted(self.actual_deck)}")
         print(f"Score threshold is now: {self.score_threshold}")
+        print(f"Your hand: {sorted(self.hand_state)}")

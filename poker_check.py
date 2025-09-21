@@ -3,8 +3,6 @@ import random
 from scoring import PokerScore, valid_card_scoring
 from rounds import RoundManager
 
-score = PokerScore()
-
 # Used to check for straights and straight flush
 ORDER = ['A','K','Q','J','10','9','8','7','6','5','4','3','2']
 
@@ -16,19 +14,20 @@ default_deck = (
 '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS', 'AS'
 )
 
-actual_deck = []
+# Set defaults
+actual_deck = list(default_deck)
 hand_state = []
 discard_pile = []
+score = PokerScore()
 
-roundmgr = RoundManager(actual_deck, discard_pile, score)
-
-actual_deck = list(default_deck)
-
+# Initiate round/score functionality
+roundmgr = RoundManager(actual_deck, hand_state, discard_pile, score)
 
 # Starting hand
 for _ in range(9):
     hand_state.extend([actual_deck.pop(random.randrange(len(actual_deck)))])
 
+# Initial status
 print(f"Remaining cards: {actual_deck}")
 print(f"Your hand: {sorted(hand_state)}")
 print(f"Starting score threshold is: {roundmgr.score_threshold}")
@@ -42,7 +41,7 @@ def check_hand_rank(hand):
     # care about the suit
     card_suits = [card[-1] for card in hand]
 
-    # Individual card scoring
+    # Individual card and hand scoring
     score.add_card_scores(card_numbers, valid_card_scoring)
 
     # Counts the # of occurences with the card_numbers variable, to check for 
@@ -119,10 +118,27 @@ while roundmgr.hands_played > 0:
         continue
 
     show_status()
+
     if score.value >= roundmgr.score_threshold:
         print("Moving to next round")
+        # Pick two additional cards from the default deck and add it to your actual deck
+        draft_pool = random.sample(default_deck, 5)
+        print(f"Choose 2 cards from: {draft_pool}")
+
+        picks = []
+        while len(picks) < 2:
+            # Pick one at a time
+            choice = input("Pick two cards, one at a time: ").upper()
+            if choice in draft_pool and choice not in picks:
+                picks.append(choice)
+            else:
+                print("Invalid choice, try again.")
+
+        actual_deck.extend(picks)
+        print(f"You added {picks} to your deck!")
         roundmgr.next_round()
-        if roundmgr.round_num > 3:
+        # Game ends if you beat round 4
+        if roundmgr.round_num > 4:
             print("You win!")
             break
     if roundmgr.hands_played == 0:

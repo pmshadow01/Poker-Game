@@ -1,4 +1,4 @@
-# Scoring for individual cards, will be changed later
+# Scoring is communicated a little vaguely right now but is still 100% correct internally. Please don't mind the mess.
 valid_card_scoring = {
     "A": 30,
     "K": 25,
@@ -30,41 +30,41 @@ class PokerScore:
     # Hand rank scoring
     def high_card(self):
         self.value += 50
-        return f"This is a high card. Total cumulative score: {self.value}"
+        return f"This is a high card."
     
     def pair(self):
         self.value += 60
-        return f"This is a pair. Total cumulative score: {self.value}"
+        return f"This is a pair."
 
     def two_pair(self):
         self.value += 70
-        return f"This is a two pair. Total cumulative score: {self.value}"
+        return f"This is a two pair."
     
     def three_of_a_kind(self):
         self.value += 90
-        return f"This is a three of a kind. Total cumulative score: {self.value}"
+        return f"This is a three of a kind."
     
     def straight(self):
         self.value += 110
-        return f"This is a straight. Total cumulative score: {self.value}"
+        return f"This is a straight."
     
     def flush(self):
         self.value += 125
-        return f"This is a flush. Total cumulative score: {self.value}"
+        return f"This is a flush."
     
     def full_house(self):
         self.value += 175
-        return f"This is a full house. Total cumulative score: {self.value}"
+        return f"This is a full house."
     
     def four_of_a_kind(self):
         self.value += 200
-        return f"This is a four of a kind. Total cumulative score: {self.value}"
+        return f"This is a four of a kind."
     
     def straight_flush(self):
         self.value += 250
-        return f"This is a straight flush. Total cumulative score: {self.value}"
+        return f"This is a straight flush."
     
     def royal_flush(self):
         self.value += 500
-        return f"This is a royal flush. Total cumulative score: {self.value}. Congrats!!"
+        return f"This is a royal flush! Congrats!!"
         
