@@ -1,9 +1,10 @@
 from collections import Counter
 import random
 from scoring import PokerScore, valid_card_scoring
+from rounds import RoundManager
 
 score = PokerScore()
-hands_played = 5
+
 # Used to check for straights and straight flush
 ORDER = ['A','K','Q','J','10','9','8','7','6','5','4','3','2']
 
@@ -17,31 +18,29 @@ default_deck = (
 
 actual_deck = []
 hand_state = []
+discard_pile = []
 
-# At some point, the actual deck players use will not be the same as they started with.
-# There needs to be a default deck start state once more features are added.
-actual_deck.extend(default_deck)
+roundmgr = RoundManager(actual_deck, discard_pile, score)
+
+actual_deck = list(default_deck)
+
 
 # Starting hand
 for _ in range(9):
     hand_state.extend([actual_deck.pop(random.randrange(len(actual_deck)))])
 
-# Game start sort of
 print(f"Remaining cards: {actual_deck}")
 print(f"Your hand: {sorted(hand_state)}")
+print(f"Starting score threshold is: {roundmgr.score_threshold}")
 
-def check_hand_rank(hand_state):
-
-    # Checks for the usual poker hand size, this will be slightly edited later
-    if len(hand_state) != 5:
-        return "Invalid poker hand"
+def check_hand_rank(hand):
 
     # This looks at the number of the card, not including the suit for hands that don't
     # care what the suit is
-    card_numbers = [card[:-1] for card in hand_state]
+    card_numbers = [card[:-1] for card in hand]
     # Similar to card_numbers, except this only looks at the suit for hands that
     # care about the suit
-    card_suits = [card[-1] for card in hand_state]
+    card_suits = [card[-1] for card in hand]
 
     # Individual card scoring
     score.add_card_scores(card_numbers, valid_card_scoring)
@@ -57,9 +56,7 @@ def check_hand_rank(hand_state):
     second_card = count_hand_check[1][1]
 
     # Logic to check for straight and straight flush
-    is_straight = any(
-    sorted(card_numbers, key=lambda card: ORDER.index(card)) == ORDER[i:i+5]
-    for i in range(len(ORDER) - 4))
+    is_straight = any(sorted(card_numbers, key=lambda card: ORDER.index(card)) == ORDER[i:i+5] for i in range(len(ORDER) - 4))
 
     # Logic to check for flush
     is_flush = all(suit == card_suits[0] for suit in card_suits)
@@ -69,44 +66,51 @@ def check_hand_rank(hand_state):
 
     # Check for Royal Flush
     if is_straight and is_flush and any(face == "A" for face in card_numbers):
-        return f"This is a royal flush, {score.royal_flush()}"
+        return score.royal_flush()
     # Check for Straight Flush
     if (is_straight and is_flush) or (edge_case_straight and is_flush):
-        return f"This is a straight flush, {score.straight_flush()}"
+        return score.straight_flush()
     # Check Four Of A Kind
     if first_card == 4:
-        return f"This is a four of a kind, {score.four_of_a_kind()}"
+        return score.four_of_a_kind()
     # Check Full House
     if first_card == 3 and second_card == 2:
-        return f"This is a full house, {score.full_house()}"
+        return score.full_house()
     # Check Flush
     if is_flush:
-        return f"This is a flush, {score.flush()}"
+        return score.flush()
     # Check Straight
     if is_straight or edge_case_straight:
-        return f"This is a straight, {score.straight()}"
+        return score.straight()
     # Check Three Of A Kind
     if first_card == 3 and second_card <= 1:
-        return f"This is a three of a kind, {score.three_of_a_kind()}"
+        return score.three_of_a_kind()
     # Check Two Pair
     if first_card == 2 and second_card == 2:
-        return f"This is a two pair, {score.two_pair()}"
+        return score.two_pair()
     # Check Pair
     if first_card > second_card and first_card == 2:
-        return f"This is a pair, {score.pair()}"
+        return score.pair()
     # Check High Card
     if first_card == 1:
-        return f"This is a high card, {score.high_card()}"
+        return score.high_card()
+    
+def show_status():
+    print(f"Remaining cards: {sorted(actual_deck)}")
+    print(f"Your hand: {sorted(hand_state)}")
+    print(check_hand_rank(play))
+    print(f"Total score: {score.value}")
+    print(f"Hands remaining: {roundmgr.hands_played}")
 
 # Keeps going until the deck is 0, then the game ends for now. Will add a set number of hand plays for the player to reach a certain score threshold instead
-while hands_played > 0:
+while roundmgr.hands_played > 0:
     user_input = input("Enter 5 cards from hand: ")
     play = user_input.upper().split()
-    valid_hand = all(card in hand_state for card in play)
-    if valid_hand:
+    valid_play = all(card in hand_state for card in play) and len(play) == 5
+    if valid_play:
         drawn = [actual_deck.pop(random.randrange(len(actual_deck))) for _ in range(5)]
         hand_state.extend(drawn)
-        hands_played -= 1
+        roundmgr.hands_played -= 1
         for card in play:
             hand_state.remove(card)
     else:
@@ -114,13 +118,13 @@ while hands_played > 0:
         print(f"Your hand: {sorted(hand_state)}")
         continue
 
-    print(f"Remaining cards: {sorted(actual_deck)}")
-    print(f"Your hand: {sorted(hand_state)}")
-    print(check_hand_rank(play))
-    print(f"Total score: {score.value}")
-    print(f"Hands remaining: {hands_played}")
-
-# To be added later: instead of return statements on the hand name,
-# functions will be imported for actual scoring. Then a round system, then something
-# like a card shop to create more hand possibilities such as Flush Five and
-# Five Of A Kind, similar to the actual Balatro game.
+    show_status()
+    if score.value >= roundmgr.score_threshold:
+        print("Moving to next round")
+        roundmgr.next_round()
+        if roundmgr.round_num > 3:
+            print("You win!")
+            break
+    if roundmgr.hands_played == 0:
+        print("Better luck next time!")
+        break
